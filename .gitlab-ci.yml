@@ -5,7 +5,6 @@ services:
   
 stages:
   - build_image
-  - tag_image_tua
 
 before_script:
   - export REG_PREFIX="${CI_REGISTRY}/${CI_PROJECT_PATH}"
@@ -24,18 +23,3 @@ build-httpservice:
   only:
     refs:
       - dev
-
-tua-httpservice:
-  stage: tag_image_tua
-  script:
-     - export SERVICE_NAME="$SERVICE_NAME"
-     - . ./export_commit_for_tua.sh
-     - export IMAGE_NAME_DEV="${REG_PREFIX}/${SERVICE_NAME}/dev:${COMMIT_FOR_TUA}"
-     - docker pull "${IMAGE_NAME_DEV}"
-     - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_REF_NAME}"
-     - docker tag "${IMAGE_NAME_DEV}" "${IMAGE_NAME}"
-     - docker push "${IMAGE_NAME}"
-  only:
-    - tags
-  except:
-    - prod
