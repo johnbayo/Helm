@@ -33,7 +33,7 @@ tua-httpservice:
      - . ./export_commit_for_tua.sh
      - export IMAGE_NAME_DEV="${REG_PREFIX}/${SERVICE_NAME}/dev:${COMMIT_FOR_TUA}"
      - docker pull "${IMAGE_NAME_DEV}"
-     - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}/tua:${CI_COMMIT_TAG}"
+     - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}:tua-${CI_COMMIT_TAG}"
      - docker tag "${IMAGE_NAME_DEV}" "${IMAGE_NAME}"
      - docker push "${IMAGE_NAME}"
   only:
