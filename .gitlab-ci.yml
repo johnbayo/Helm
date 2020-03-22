@@ -44,7 +44,7 @@ tua-httpservice:
 prod-httpservice:
   stage: tag_image_prod
   script:
-    - export IMAGE_NAME_TUA="${REG_PREFIX}/${SERVICE_NAME}/tua:${CI_COMMIT_TAG}"
+    - export IMAGE_NAME_TUA="${REG_PREFIX}/${SERVICE_NAME}:tua-${CI_COMMIT_TAG}"
     - docker pull "${IMAGE_NAME_TUA}"
     - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}:${CI_COMMIT_TAG}"
     - export IMAGE_NAME_LATEST="${REG_PREFIX}/${SERVICE_NAME}:latest"
