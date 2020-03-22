@@ -1,0 +1,58 @@
+image: docker:latest
+
+services:
+  - docker:dind
+  
+stages:
+  - build_image
+  - tag_image_tua
+  - tag_image_prod
+
+before_script:
+  - export REG_PREFIX="${CI_REGISTRY}/${CI_PROJECT_PATH}"
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - export SERVICE_NAME="httpservice"
+
+build-httpservice:
+  stage: build_image
+  script:
+     - export SERVICE_NAME="$SERVICE_NAME"
+     - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_REF_SLUG}"
+     - export IMAGE_NAME_LATEST="${REG_PREFIX}/${SERVICE_NAME}/${CI_COMMIT_REF_SLUG}:latest"
+     - docker build --pull -t "${IMAGE_NAME}" -t "${IMAGE_NAME_LATEST}" .
+     - docker push "${IMAGE_NAME}"
+     - docker push "${IMAGE_NAME_LATEST}"
+  only:
+    refs:
+      - dev
+
+tua-httpservice:
+  stage: tag_image_tua
+  script:
+     - export SERVICE_NAME="$SERVICE_NAME"
+     - . ./export_commit_for_tua.sh
+     - export IMAGE_NAME_DEV="${REG_PREFIX}/${SERVICE_NAME}/dev:${COMMIT_FOR_TUA}"
+     - docker pull "${IMAGE_NAME_DEV}"
+     - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_REF_NAME}"
+     - docker tag "${IMAGE_NAME_DEV}" "${IMAGE_NAME}"
+     - docker push "${IMAGE_NAME}"
+  only:
+    - tags
+  except:
+    - prod
+
+prod-httpservice:
+  stage: tag_image_prod
+  script:
+    - export IMAGE_NAME_TUA="${REG_PREFIX}/${SERVICE_NAME}/tua:${CI_COMMIT_REF_NAME}"
+    - docker pull "${IMAGE_NAME_TUA}"
+    - export IMAGE_NAME="${REG_PREFIX}/${SERVICE_NAME}/${CI_COMMIT_REF_SLUG}:${CI_COMMIT_REF_NAME}"
+    - export IMAGE_NAME_LATEST="${REG_PREFIX}/${SERVICE_NAME}/${CI_COMMIT_REF_SLUG}:latest"
+    - docker tag "${IMAGE_NAME_TUA}" "${IMAGE_NAME}"
+    - docker tag "${IMAGE_NAME_TUA}" "${IMAGE_NAME_LATEST}"
+    - docker push "${IMAGE_NAME}"
+    - docker push "${IMAGE_NAME_LATEST}"
+ only:
+   - tags
+ except:
+   - tua
