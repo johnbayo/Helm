@@ -99,7 +99,6 @@ data:
 metadata:
 ...
   namespace: {{ .Values.namespace }}
-```
 
 # change replica count in values.yaml
 # define configmap value
