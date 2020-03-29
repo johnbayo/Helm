@@ -57,29 +57,33 @@ this is the production branch where the image is deployed to the production envi
 * download helm, kubectl, terraform (optional) binaries in the bin folder
 
 ``` bash
-wget https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -O /tmp/helm-v3.1.2-linux-amd64.tar.gz; tar -zxvf /tmp/helm-v3.1.2-linux-amd64.tar.gz -C /tmp/bin; mv /tmp/bin/linux-amd64/helm bin/; rm -rf bin/linux-amd64/;
-curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl; chmod +x kubectl;
-mv kubectl bin/;
-wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip -O /tmp/terraform.zip; unzip /tmp/terraform.zip -d bin;
+## helm ##
+~$ wget https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -O /tmp/helm-v3.1.2-linux-amd64.tar.gz; tar -zxvf /tmp/helm-v3.1.2-linux-amd64.tar.gz -C /tmp/bin; mv /tmp/bin/linux-amd64/helm bin/; rm -rf bin/linux-amd64/;
+## kubectl ##
+~$ curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl; chmod +x kubectl;mv kubectl bin/;
+## terraform ##
+~$ wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip -O /tmp/terraform.zip; unzip /tmp/terraform.zip -d bin;
 ```
 
 * configure the pipelines stages as seen in .gitlab-ci.yml for the different branches
 
 * deploy your cluster and output your cluster config (optional and out of scope)
 ``` bash
-terraform output kube_config > ../k8s/config
+~$ terraform output kube_config > ../k8s/config
 ```
 
 *  configure the helm chart
 
 ``` bash
-./bin/helm create httpservice
-# change appVersion from 1.16.0 in Chart.yml
-vim k8s/httpservice/Chart.yaml
+## create the chart ##
+~$ ./bin/helm create httpservice
+
+## change appVersion from 1.16.0 in Chart.yml ##
+~$ vim k8s/httpservice/Chart.yaml
 appVersion: latest
-# add new templates and remove the ingress template
-``` bash
-vim k8s/httpservice/templates/configmap.yaml
+
+## add the configmap template and remove the ingress template ##
+~$ vim k8s/httpservice/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -89,6 +93,7 @@ metadata:
     {{- include "httpservice.labels" . | nindent 4 }}
 data:
   myValue: {{ .Values.configmapvalue }}
+
 
 # add namespace in all templates metadata (deployment,service,serviceaccount).yaml
 metadata:
@@ -100,7 +105,7 @@ metadata:
 # define configmap value
 # change service type and add target port
 # change image pull policy
-vim k8s/httpservice/values.yaml
+~$ vim k8s/httpservice/values.yaml
 replicaCount: 3
 
 image: registry.gitlab.com/john.bayo/helm/httpservice
@@ -118,7 +123,11 @@ configmapvalue: foo
 * deploy the chart
 
 ``` bash
-./deploy.sh
+~$ git tag 0.1
+~$ git push origin 0.1
+## wait about 2mins for the image to be tagged from tua to prod ##
+# N.B the deploy script can also be run in the pipeline, but for this project we will trigger from the control host
+~$ ./deploy.sh
 ```
 
 ## Endpoints
